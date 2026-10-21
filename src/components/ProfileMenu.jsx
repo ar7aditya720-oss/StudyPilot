@@ -3,7 +3,7 @@ import { LogOut, User, ChevronDown, CheckCircle2, Cloud, Edit3, CalendarDays } f
 import { useAuth } from '../lib/auth';
 import { getInitials } from '../lib/profileUtils';
 
-export function ProfileMenu({ compact = false, onEditProfile, onViewProfile }) {
+export function ProfileMenu({ compact = false, onEditProfile, onViewProfile, onExitDemo }) {
   const { user, profile, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -79,8 +79,16 @@ export function ProfileMenu({ compact = false, onEditProfile, onViewProfile }) {
               </small>
             )}
             {email && <span>{email}</span>}
-            <div className="account-tag">
-              <Cloud size={11} /> Cloud Synchronized
+            <div className={`account-tag ${!user ? 'demo' : ''}`}>
+              {user ? (
+                <>
+                  <Cloud size={11} /> Cloud Synchronized
+                </>
+              ) : (
+                <>
+                  <User size={11} /> Local Demo Mode
+                </>
+              )}
             </div>
           </div>
           <div className="dropdown-divider" />
@@ -115,11 +123,16 @@ export function ProfileMenu({ compact = false, onEditProfile, onViewProfile }) {
             className="dropdown-item danger"
             onClick={async () => {
               setOpen(false);
-              await signOut();
+              if (user) {
+                await signOut();
+              }
+              if (onExitDemo) {
+                onExitDemo();
+              }
             }}
           >
             <LogOut size={14} />
-            Sign out
+            {user ? 'Sign out' : 'Exit Demo & Sign in'}
           </button>
         </div>
       )}

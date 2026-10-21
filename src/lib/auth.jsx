@@ -75,6 +75,33 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    // 0. Check for OAuth errors or cancellation in URL on mount
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash ? window.location.hash.substring(1) : '';
+      const search = window.location.search ? window.location.search.substring(1) : '';
+      const hashParams = new URLSearchParams(hash);
+      const searchParams = new URLSearchParams(search);
+      const errorMsg =
+        hashParams.get('error_description') ||
+        searchParams.get('error_description') ||
+        hashParams.get('error') ||
+        searchParams.get('error');
+
+      if (errorMsg) {
+        const decoded = decodeURIComponent(errorMsg).replace(/\+/g, ' ');
+        if (
+          decoded.includes('access_denied') ||
+          decoded.includes('cancelled') ||
+          decoded.includes('canceled')
+        ) {
+          setAuthError('Google sign-in was cancelled. Please try again or use local demo mode.');
+        } else {
+          setAuthError(decoded);
+        }
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
+
     // 1. Initial session check
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
@@ -96,8 +123,12 @@ export function AuthProvider({ children }) {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       if (currentSession?.user) {
-        if (typeof window !== 'undefined' && window.location.hash && window.location.hash.includes('access_token')) {
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        if (typeof window !== 'undefined') {
+          const hasHash = window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('refresh_token'));
+          const hasSearch = window.location.search && (window.location.search.includes('code=') || window.location.search.includes('error='));
+          if (hasHash || hasSearch) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
         }
         await loadProfile(currentSession.user.id, currentSession.user);
       } else {

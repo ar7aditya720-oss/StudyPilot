@@ -399,9 +399,7 @@ function App() {
   if (!user && !offlineDemoMode) {
     return (
       <AuthScreen
-        onContinueOffline={
-          !isConfigured ? () => setOfflineDemoMode(true) : undefined
-        }
+        onContinueOffline={() => setOfflineDemoMode(true)}
       />
     );
   }
@@ -501,6 +499,7 @@ function App() {
           <ProfileMenu
             onEditProfile={() => setEditProfileOpen(true)}
             onViewProfile={() => setPage('Profile')}
+            onExitDemo={() => setOfflineDemoMode(false)}
           />
         </div>
       </aside>
@@ -532,6 +531,7 @@ function App() {
               compact
               onEditProfile={() => setEditProfileOpen(true)}
               onViewProfile={() => setPage('Profile')}
+              onExitDemo={() => setOfflineDemoMode(false)}
             />
           </div>
         </header>
